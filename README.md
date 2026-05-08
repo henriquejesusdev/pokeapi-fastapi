@@ -88,6 +88,15 @@ postgresql+psycopg2://postgres:postgres@localhost:5432/pokedex
 
 As tabelas sao criadas automaticamente quando a API inicia.
 
+## Documentação
+
+A API usa a documentação automática do FastAPI.
+
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+Quando a API estiver em produção, o link de documentação será o mesmo caminho base seguido de `/docs`.
+
 ## Endpoints
 
 ### Home
@@ -151,6 +160,53 @@ Exemplo:
 
 ```text
 GET /external/pokemon/pikachu
+```
+
+## Exemplos de resposta
+
+### Exemplo `GET /pokemons/`
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "external_id": 25,
+      "name": "pikachu",
+      "height": 4,
+      "weight": 60,
+      "types": ["electric"],
+      "sprites": {
+        "front_default": "https://example.com/pikachu-front.png",
+        "back_default": "https://example.com/pikachu-back.png"
+      }
+    }
+  ],
+  "pagination": {
+    "total": 1,
+    "limit": 20,
+    "offset": 0,
+    "next": null,
+    "previous": null
+  }
+}
+```
+
+### Exemplo `POST /pokemons/import/pikachu`
+
+```json
+{
+  "id": 1,
+  "external_id": 25,
+  "name": "pikachu",
+  "height": 4,
+  "weight": 60,
+  "types": ["electric"],
+  "sprites": {
+    "front_default": "https://example.com/pikachu-front.png",
+    "back_default": "https://example.com/pikachu-back.png"
+  }
+}
 ```
 
 ## Testes
