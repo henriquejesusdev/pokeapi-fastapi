@@ -161,4 +161,10 @@ Para rodar os testes:
 poetry run pytest
 ```
 
+Para rodar os testes com cobertura:
+
+```powershell
+poetry run pytest --cov=src --cov-report=term-missing
+```
+
 Os testes usam SQLite em memoria para nao depender do PostgreSQL.
