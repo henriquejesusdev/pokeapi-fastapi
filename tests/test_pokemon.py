@@ -44,12 +44,25 @@ def mock_external_pokemon(monkeypatch):
         if identifier == "missingno":
             return None
 
+        if identifier in ("pikachu", "25"):
+            return {
+                "external_id": 25,
+                "name": "pikachu",
+                "height": 4,
+                "weight": 60,
+                "types": "electric",
+                "front_default": "https://example.com/pikachu-front.png",
+                "back_default": "https://example.com/pikachu-back.png",
+            }
+
         return {
-            "external_id": 25,
-            "name": "pikachu",
-            "height": 4,
-            "weight": 60,
-            "types": "electric",
+            "external_id": 1,
+            "name": "bulbasaur",
+            "height": 7,
+            "weight": 69,
+            "types": "grass,poison",
+            "front_default": "https://example.com/bulbasaur-front.png",
+            "back_default": "https://example.com/bulbasaur-back.png",
         }
 
     monkeypatch.setattr(
@@ -72,7 +85,11 @@ def test_import_pokemon(mock_external_pokemon):
         "name": "pikachu",
         "height": 4,
         "weight": 60,
-        "types": "electric",
+        "types": ["electric"],
+        "sprites": {
+            "front_default": "https://example.com/pikachu-front.png",
+            "back_default": "https://example.com/pikachu-back.png",
+        },
     }
 
 
@@ -98,26 +115,61 @@ def test_list_pokemons(mock_external_pokemon):
     response = client.get("/pokemons/")
 
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "id": 1,
-            "external_id": 25,
-            "name": "pikachu",
-            "height": 4,
-            "weight": 60,
-            "types": "electric",
-        }
-    ]
+    assert response.json() == {
+        "data": [
+            {
+                "id": 1,
+                "external_id": 25,
+                "name": "pikachu",
+                "height": 4,
+                "weight": 60,
+                "types": ["electric"],
+                "sprites": {
+                    "front_default": "https://example.com/pikachu-front.png",
+                    "back_default": "https://example.com/pikachu-back.png",
+                },
+            }
+        ],
+        "pagination": {
+            "total": 1,
+            "limit": 20,
+            "offset": 0,
+            "next": None,
+            "previous": None,
+        },
+    }
 
 
 def test_list_pokemons_pagination(mock_external_pokemon):
-    client.post("/pokemons/import/pikachu")
+    client.post("/pokemons/import/bulbasaur")
     client.post("/pokemons/import/pikachu")
 
-    response = client.get("/pokemons/?limit=1&offset=1")
+    response = client.get("/pokemons/?limit=1&offset=0")
 
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json() == {
+        "data": [
+            {
+                "id": 1,
+                "external_id": 1,
+                "name": "bulbasaur",
+                "height": 7,
+                "weight": 69,
+                "types": ["grass", "poison"],
+                "sprites": {
+                    "front_default": "https://example.com/bulbasaur-front.png",
+                    "back_default": "https://example.com/bulbasaur-back.png",
+                },
+            }
+        ],
+        "pagination": {
+            "total": 2,
+            "limit": 1,
+            "offset": 0,
+            "next": "/pokemons?limit=1&offset=1",
+            "previous": None,
+        },
+    }
 
 
 def test_get_pokemon_by_id(mock_external_pokemon):
@@ -133,7 +185,11 @@ def test_get_pokemon_by_id(mock_external_pokemon):
         "name": "pikachu",
         "height": 4,
         "weight": 60,
-        "types": "electric",
+        "types": ["electric"],
+        "sprites": {
+            "front_default": "https://example.com/pikachu-front.png",
+            "back_default": "https://example.com/pikachu-back.png",
+        },
     }
 
 

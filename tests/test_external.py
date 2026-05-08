@@ -38,6 +38,10 @@ def test_get_external_pokemon(monkeypatch):
                 "height": 4,
                 "weight": 60,
                 "types": [{"type": {"name": "electric"}}],
+                "sprites": {
+                    "front_default": "https://example.com/pikachu-front.png",
+                    "back_default": "https://example.com/pikachu-back.png",
+                },
             },
         )
 
@@ -52,6 +56,8 @@ def test_get_external_pokemon(monkeypatch):
         "height": 4,
         "weight": 60,
         "types": "electric",
+        "front_default": "https://example.com/pikachu-front.png",
+        "back_default": "https://example.com/pikachu-back.png",
     }
 
 

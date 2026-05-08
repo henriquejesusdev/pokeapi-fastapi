@@ -15,6 +15,15 @@ class Pokemon(Base):
     height: Mapped[int] = mapped_column(Integer, nullable=False)
     weight: Mapped[int] = mapped_column(Integer, nullable=False)
     types: Mapped[str] = mapped_column(String, nullable=False)
+    front_default: Mapped[str | None] = mapped_column(String, nullable=True)
+    back_default: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    @property
+    def sprites(self):
+        return {
+            "front_default": self.front_default,
+            "back_default": self.back_default,
+        }
 
 
 class User(Base):

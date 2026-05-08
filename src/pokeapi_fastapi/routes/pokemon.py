@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from pokeapi_fastapi.database.connection import get_db
 from pokeapi_fastapi.database.models import Pokemon
-from pokeapi_fastapi.schemas.pokemon import PokemonResponse
+from pokeapi_fastapi.schemas.pokemon import PokemonListResponse, PokemonResponse
 from pokeapi_fastapi.services.pokeapi import get_external_pokemon_data
 
 router = APIRouter(prefix="/pokemons", tags=["Pokemons"])
@@ -37,8 +38,9 @@ def import_pokemon(identifier: str, db: Session = Depends(get_db)):
     return pokemon
 
 
-@router.get("/", response_model=list[PokemonResponse])
+@router.get("/", response_model=PokemonListResponse)
 def list_pokemons(
+    request: Request,
     limit: int = Query(20, ge=1),
     offset: int = Query(0, ge=0),
     page: int | None = Query(None, ge=1),
@@ -55,7 +57,28 @@ def list_pokemons(
         offset = (page - 1) * size
         limit = size
 
-    return db.query(Pokemon).offset(offset).limit(limit).all()
+    total = db.query(func.count(Pokemon.id)).scalar() or 0
+    pokemons = db.query(Pokemon).offset(offset).limit(limit).all()
+    base_path = request.url.path.rstrip("/") or "/"
+
+    next_offset = offset + limit
+    next_url = f"{base_path}?limit={limit}&offset={next_offset}" if next_offset < total else None
+    previous_url = (
+        f"{base_path}?limit={limit}&offset={max(offset - limit, 0)}"
+        if offset > 0
+        else None
+    )
+
+    return {
+        "data": pokemons,
+        "pagination": {
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "next": next_url,
+            "previous": previous_url,
+        },
+    }
 
 
 @router.get("/{pokemon_id}", response_model=PokemonResponse)

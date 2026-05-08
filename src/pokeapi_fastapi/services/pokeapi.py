@@ -24,4 +24,6 @@ def get_external_pokemon_data(identifier: str):
         "types": ",".join(
             pokemon_type["type"]["name"] for pokemon_type in data["types"]
         ),
+        "front_default": data["sprites"]["front_default"],
+        "back_default": data["sprites"]["back_default"],
     }
