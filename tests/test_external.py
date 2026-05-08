@@ -32,7 +32,13 @@ def test_get_external_pokemon(monkeypatch):
         assert timeout == 10
         return FakeResponse(
             200,
-            {"id": 25, "name": "pikachu", "height": 4, "weight": 60},
+            {
+                "id": 25,
+                "name": "pikachu",
+                "height": 4,
+                "weight": 60,
+                "types": [{"type": {"name": "electric"}}],
+            },
         )
 
     monkeypatch.setattr(requests, "get", fake_get)
@@ -41,10 +47,11 @@ def test_get_external_pokemon(monkeypatch):
 
     assert response.status_code == 200
     assert response.json() == {
-        "id": 25,
+        "external_id": 25,
         "name": "pikachu",
         "height": 4,
         "weight": 60,
+        "types": "electric",
     }
 
 
@@ -56,5 +63,5 @@ def test_get_external_pokemon_not_found(monkeypatch):
 
     response = client.get("/external/pokemon/missingno")
 
-    assert response.status_code == 200
+    assert response.status_code == 404
     assert response.json() == {"detail": "Pokemon not found in external API"}

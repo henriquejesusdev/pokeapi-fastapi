@@ -1,6 +1,6 @@
 # Pokedex API
 
-API em FastAPI para cadastro de usuarios, login, CRUD de pokemons e consulta externa na PokeAPI.
+API em FastAPI para cadastro de usuarios, login, consulta externa na PokeAPI e cache local de pokemons no PostgreSQL.
 
 ## Tecnologias
 
@@ -122,24 +122,23 @@ Exemplo de login:
 }
 ```
 
-### Pokemons
+### Pokemons salvos no banco
 
 ```text
-POST   /pokemons/
+POST   /pokemons/import/{identifier}
 GET    /pokemons/
 GET    /pokemons/{pokemon_id}
-PUT    /pokemons/{pokemon_id}
 DELETE /pokemons/{pokemon_id}
 ```
 
-Exemplo de pokemon:
+O `identifier` pode ser o nome ou numero do pokemon na Pokedex:
 
-```json
-{
-  "name": "Pikachu",
-  "type": "Electric"
-}
+```text
+POST /pokemons/import/pikachu
+POST /pokemons/import/25
 ```
+
+Ao importar, a API consulta a PokeAPI externa, normaliza os dados e salva no banco local. Se o pokemon ja existir, a API retorna o registro salvo sem duplicar.
 
 ### API externa
 

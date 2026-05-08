@@ -1,17 +1,12 @@
 from pydantic import BaseModel, ConfigDict
 
 
-class PokemonCreate(BaseModel):
-    name: str
-    type: str
-
-
-class PokemonUpdate(BaseModel):
-    name: str | None = None
-    type: str | None = None
-
-
-class PokemonResponse(PokemonCreate):
+class PokemonResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    external_id: int
+    name: str
+    height: int
+    weight: int
+    types: str
