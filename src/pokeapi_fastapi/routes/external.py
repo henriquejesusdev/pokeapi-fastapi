@@ -1,6 +1,6 @@
-import requests
-from fastapi import APIRouter
-from requests import Response
+from fastapi import APIRouter, HTTPException, status
+
+from pokeapi_fastapi.services.pokeapi import get_external_pokemon_data
 
 router = APIRouter(prefix="/external", tags=["External"])
 
@@ -12,14 +12,12 @@ def external_status():
 
 @router.get("/pokemon/{name}")
 def get_external_pokemon(name: str):
-    response: Response = requests.get(
-        f"https://pokeapi.co/api/v2/pokemon/{name}",
-        timeout=10,
-    )
+    pokemon = get_external_pokemon_data(name)
 
-    if response.status_code == 404:
-        return {"detail": "Pokemon not found in external API"}
+    if pokemon is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Pokemon not found in external API",
+        )
 
-    response.raise_for_status()
-
-    return response.json()
+    return pokemon

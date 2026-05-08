@@ -10,8 +10,20 @@ class Pokemon(Base):
     __tablename__ = "pokemons"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String, nullable=False)
-    type: Mapped[str] = mapped_column(String, nullable=False)
+    external_id: Mapped[int] = mapped_column(Integer, unique=True, index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    height: Mapped[int] = mapped_column(Integer, nullable=False)
+    weight: Mapped[int] = mapped_column(Integer, nullable=False)
+    types: Mapped[str] = mapped_column(String, nullable=False)
+    front_default: Mapped[str | None] = mapped_column(String, nullable=True)
+    back_default: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    @property
+    def sprites(self):
+        return {
+            "front_default": self.front_default,
+            "back_default": self.back_default,
+        }
 
 
 class User(Base):
