@@ -4,6 +4,7 @@ from fastapi import FastAPI
 
 from pokeapi_fastapi.database.connection import engine
 from pokeapi_fastapi.database.models import Base
+from pokeapi_fastapi.routes.auth import router as auth_router
 from pokeapi_fastapi.routes.external import router as external_router
 from pokeapi_fastapi.routes.pokemon import router as pokemon_router
 
@@ -24,3 +25,4 @@ def home():
 
 app.include_router(external_router)
 app.include_router(pokemon_router)
+app.include_router(auth_router)

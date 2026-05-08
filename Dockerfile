@@ -2,6 +2,8 @@ FROM python:3.14
 
 WORKDIR /app
 
+ENV PYTHONPATH=/app/src
+
 COPY . .
 
 RUN pip install poetry
