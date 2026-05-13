@@ -1,13 +1,81 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from pokeapi_fastapi.database.connection import get_db
 from pokeapi_fastapi.database.models import Pokemon
-from pokeapi_fastapi.schemas.pokemon import PokemonListResponse, PokemonResponse
+from pokeapi_fastapi.schemas.pokemon import (
+    PokemonCreate,
+    PokemonListResponse,
+    PokemonResponse,
+    PokemonUpdate,
+)
 from pokeapi_fastapi.services.pokeapi import get_external_pokemon_data
 
 router = APIRouter(prefix="/pokemons", tags=["Pokemons"])
+
+
+def _pokemon_payload_to_model_data(pokemon_payload: PokemonCreate | PokemonUpdate):
+    data = pokemon_payload.model_dump(exclude_unset=True)
+    sprites = data.pop("sprites", None)
+
+    if "types" in data:
+        data["types"] = ",".join(data["types"])
+
+    if sprites is not None:
+        if "front_default" in sprites:
+            data["front_default"] = sprites["front_default"]
+        if "back_default" in sprites:
+            data["back_default"] = sprites["back_default"]
+
+    return data
+
+
+def _raise_if_pokemon_conflicts(
+    db: Session,
+    *,
+    external_id: int | None = None,
+    name: str | None = None,
+    pokemon_id: int | None = None,
+):
+    filters = []
+
+    if external_id is not None:
+        filters.append(Pokemon.external_id == external_id)
+
+    if name is not None:
+        filters.append(Pokemon.name == name)
+
+    if not filters:
+        return
+
+    query = db.query(Pokemon).filter(or_(*filters))
+
+    if pokemon_id is not None:
+        query = query.filter(Pokemon.id != pokemon_id)
+
+    if query.first() is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Pokemon with this external_id or name already exists",
+        )
+
+
+@router.post("/", response_model=PokemonResponse, status_code=status.HTTP_201_CREATED)
+def create_pokemon(pokemon_payload: PokemonCreate, db: Session = Depends(get_db)):
+    _raise_if_pokemon_conflicts(
+        db,
+        external_id=pokemon_payload.external_id,
+        name=pokemon_payload.name,
+    )
+
+    pokemon = Pokemon(**_pokemon_payload_to_model_data(pokemon_payload))
+
+    db.add(pokemon)
+    db.commit()
+    db.refresh(pokemon)
+
+    return pokemon
 
 
 @router.post("/import/{identifier}", response_model=PokemonResponse)
@@ -90,6 +158,36 @@ def get_pokemon(pokemon_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Pokemon not found",
         )
+
+    return pokemon
+
+
+@router.put("/{pokemon_id}", response_model=PokemonResponse)
+def update_pokemon(
+    pokemon_id: int,
+    pokemon_payload: PokemonUpdate,
+    db: Session = Depends(get_db),
+):
+    pokemon = db.query(Pokemon).filter(Pokemon.id == pokemon_id).first()
+
+    if pokemon is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Pokemon not found",
+        )
+
+    _raise_if_pokemon_conflicts(
+        db,
+        external_id=pokemon_payload.external_id,
+        name=pokemon_payload.name,
+        pokemon_id=pokemon_id,
+    )
+
+    for field, value in _pokemon_payload_to_model_data(pokemon_payload).items():
+        setattr(pokemon, field, value)
+
+    db.commit()
+    db.refresh(pokemon)
 
     return pokemon
 

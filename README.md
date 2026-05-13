@@ -134,9 +134,11 @@ Exemplo de login:
 ### Pokemons salvos no banco
 
 ```text
+POST   /pokemons/
 POST   /pokemons/import/{identifier}
 GET    /pokemons/
 GET    /pokemons/{pokemon_id}
+PUT    /pokemons/{pokemon_id}
 DELETE /pokemons/{pokemon_id}
 ```
 
@@ -148,6 +150,33 @@ POST /pokemons/import/25
 ```
 
 Ao importar, a API consulta a PokeAPI externa, normaliza os dados e salva no banco local. Se o pokemon ja existir, a API retorna o registro salvo sem duplicar.
+
+Exemplo de cadastro proprio:
+
+```json
+{
+  "external_id": 150,
+  "name": "mewtwo",
+  "height": 20,
+  "weight": 1220,
+  "types": ["psychic"],
+  "sprites": {
+    "front_default": "https://example.com/mewtwo-front.png",
+    "back_default": "https://example.com/mewtwo-back.png"
+  }
+}
+```
+
+Exemplo de atualizacao:
+
+```json
+{
+  "name": "raichu",
+  "height": 8,
+  "weight": 300,
+  "types": ["electric"]
+}
+```
 
 ### API externa
 
